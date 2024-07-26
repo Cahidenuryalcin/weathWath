@@ -13,11 +13,13 @@ class _HomePageState extends State<HomePage> {
   final TextEditingController _controller = TextEditingController();
   WeatherData? _result;
   final WeatherService _weatherService = WeatherService();
+  String _city = "";
 
   void _search() async {
     WeatherData? weatherData = await _weatherService.fetchWeather(_controller.text);
     setState(() {
       _result = weatherData;
+      _city = _controller.text.toUpperCase(); // Şehir adını büyük harfe dönüştür
       _controller.clear();
     });
   }
@@ -36,7 +38,7 @@ class _HomePageState extends State<HomePage> {
             ),
             const SizedBox(height: 20),
             if (_result != null) ...[
-              WeatherInfo(result: _result!.result),
+              WeatherInfo(result: _result!.result, city: _city),
             ] else ...[
               const Center(child: Text("Şehir ara ve hava durumunu öğren.", style: TextStyle(fontSize: 18))),
             ],
@@ -81,8 +83,9 @@ class SearchBar extends StatelessWidget {
 
 class WeatherInfo extends StatelessWidget {
   final List<Result> result;
+  final String city;
 
-  const WeatherInfo({required this.result, super.key});
+  const WeatherInfo({required this.result, required this.city, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -95,7 +98,7 @@ class WeatherInfo extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'Konumum\n${result.first.day}',
+                '$city\n${result.first.day}',
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   fontSize: 32,
@@ -114,11 +117,11 @@ class WeatherInfo extends StatelessWidget {
                   ),
                   children: [
                     TextSpan(
-                      text: result.first.degree,
+                      text: _formatDegree(result.first.degree),
                     ),
                     WidgetSpan(
                       child: Transform.translate(
-                        offset: Offset(4, -40), // const anahtar kelimesi kaldırıldı
+                        offset: Offset(4, -40),
                         child: const Text(
                           '°',
                           style: TextStyle(
@@ -142,9 +145,9 @@ class WeatherInfo extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  weatherInfoColumn('Min', result.first.min),
-                  weatherInfoColumn('Max', result.first.max),
-                  weatherInfoColumn('Nem', result.first.humidity),
+                  weatherInfoColumn('Min', _formatDegree(result.first.min)),
+                  weatherInfoColumn('Max', _formatDegree(result.first.max)),
+                  weatherInfoColumn('Nem', '%${result.first.humidity}'),
                 ],
               ),
               const SizedBox(height: 30),
@@ -181,10 +184,10 @@ class WeatherInfo extends StatelessWidget {
                       color: Colors.black,
                     ),
                     children: [
-                      TextSpan(text: weather.degree),
+                      TextSpan(text: _formatDegree(weather.degree)),
                       WidgetSpan(
                         child: Transform.translate(
-                          offset: Offset(2, -10), // const anahtar kelimesi kaldırıldı
+                          offset: Offset(2, -10),
                           child: const Text(
                             '°',
                             style: TextStyle(
@@ -206,25 +209,46 @@ class WeatherInfo extends StatelessWidget {
     );
   }
 
-  Widget weatherInfoColumn(String label, String value) {
-    return Column(
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w400,
-          ),
+String _formatDegree(String degree) {
+  return degree.split('.').first; // Dereceyi tam sayıya dönüştür
+}
+
+Widget weatherInfoColumn(String label, String value) {
+  return Column(
+    children: [
+      Text(
+        label,
+        style: const TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.w400,
         ),
-        const SizedBox(height: 10),
-        Text(
-          value,
+      ),
+      const SizedBox(height: 10),
+      RichText(
+        text: TextSpan(
           style: const TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
+            color: Colors.black,
           ),
+          children: [
+            TextSpan(text: _formatDegree(value)),
+            WidgetSpan(
+              child: Transform.translate(
+                offset: Offset(2, -6), // Derece sembolünün konumunu ayarla
+                child: const Text(
+                  '°',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w300,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
-      ],
-    );
-  }
-}
+      ),
+    ],
+  );
+}}
