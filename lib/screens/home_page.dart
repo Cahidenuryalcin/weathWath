@@ -10,16 +10,31 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final TextEditingController _controller = TextEditingController();
+  final TextEditingController _controller = TextEditingController(); 
   WeatherData? _result;
   final WeatherService _weatherService = WeatherService();
   String _city = "";
 
-  void _search() async {
-    WeatherData? weatherData = await _weatherService.fetchWeather(_controller.text);
+  // city list (to avoid errors in the search bar)
+  List<String> _cities = [
+    'Adana', 'Adıyaman', 'Afyon', 'Ağrı', 'Aksaray', 'Amasya', 'Ankara', 'Antalya', 'Ardahan',
+    'Artvin', 'Aydın', 'Balıkesir', 'Bartın', 'Batman', 'Bayburt', 'Bilecik', 'Bingöl', 'Bitlis',
+    'Bolu', 'Burdur', 'Bursa', 'Çanakkale', 'Çankırı', 'Çorum', 'Denizli', 'Diyarbakır', 'Düzce',
+    'Edirne', 'Elazığ', 'Erzincan', 'Erzurum', 'Eskişehir', 'Gaziantep', 'Giresun', 'Gümüşhane',
+    'Hakkari', 'Hatay', 'Iğdır', 'Isparta', 'İstanbul', 'İzmir', 'Kahramanmaraş', 'Karabük',
+    'Karaman', 'Kars', 'Kastamonu', 'Kayseri', 'Kırıkkale', 'Kırklareli', 'Kırşehir', 'Kilis',
+    'Kocaeli', 'Konya', 'Kütahya', 'Malatya', 'Manisa', 'Mardin', 'Mersin', 'Muğla', 'Muş',
+    'Nevşehir', 'Niğde', 'Ordu', 'Osmaniye', 'Rize', 'Sakarya', 'Samsun', 'Siirt', 'Sinop', 'Sivas',
+    'Şanlıurfa', 'Şırnak', 'Tekirdağ', 'Tokat', 'Trabzon', 'Tunceli', 'Uşak', 'Van', 'Yalova',
+    'Yozgat', 'Zonguldak'
+  ];
+
+  // search weather function by city
+  void _search(String city) async {
+    WeatherData? weatherData = await _weatherService.fetchWeather(city);
     setState(() {
       _result = weatherData;
-      _city = _controller.text.toUpperCase(); // Şehir adını büyük harfe dönüştür
+      _city = city.toUpperCase(); // city name convert uppercase 
       _controller.clear();
     });
   }
@@ -32,15 +47,16 @@ class _HomePageState extends State<HomePage> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const SizedBox(height: 50),
-            SearchBar(
+            SearchBar(              // search bar
               controller: _controller,
               onSearch: _search,
+              cities: _cities,
             ),
             const SizedBox(height: 20),
             if (_result != null) ...[
-              WeatherInfo(result: _result!.result, city: _city),
+              WeatherInfo(result: _result!.result, city: _city),    // weather info
             ] else ...[
-              const Center(child: Text("Şehir ara ve hava durumunu öğren.", style: TextStyle(fontSize: 18))),
+              const Center(child: Text("Şehir ara ve hava durumunu öğren.", style: TextStyle(fontSize: 18))),  
             ],
           ],
         ),
@@ -51,31 +67,49 @@ class _HomePageState extends State<HomePage> {
 
 class SearchBar extends StatelessWidget {
   final TextEditingController controller;
-  final VoidCallback onSearch;
+  final Function(String) onSearch;
+  final List<String> cities;
 
-  const SearchBar({required this.controller, required this.onSearch, super.key});
+  const SearchBar({required this.controller, required this.onSearch, required this.cities, super.key});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0),
-      child: TextField(
-        controller: controller,
-        decoration: InputDecoration(
-          hintText: 'Şehir Ara',
-          hintStyle: TextStyle(color: Colors.grey[400]),
-          suffixIcon: IconButton(
-            icon: const Icon(Icons.search),
-            color: Colors.grey[400],
-            onPressed: onSearch,
-          ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(30),
-            borderSide: BorderSide.none,
-          ),
-          filled: true,
-          fillColor: Colors.grey[100],
-        ),
+      child: Autocomplete<String>(
+        optionsBuilder: (TextEditingValue textEditingValue) {
+          if (textEditingValue.text.isEmpty) {
+            return const Iterable<String>.empty();
+          }
+          return cities.where((String city) {
+            return city.toLowerCase().contains(textEditingValue.text.toLowerCase());
+          });
+        },
+        onSelected: (String selection) {
+          onSearch(selection);
+        },
+        fieldViewBuilder: (BuildContext context, TextEditingController textEditingController, FocusNode focusNode, VoidCallback onFieldSubmitted) {
+          controller.text = textEditingController.text;
+          return TextField(
+            controller: textEditingController,
+            focusNode: focusNode,
+            decoration: InputDecoration(
+              hintText: 'Şehir Ara',
+              hintStyle: TextStyle(color: Colors.grey[400]),
+              suffixIcon: IconButton(
+                icon: const Icon(Icons.search),
+                color: Colors.grey[400],
+                onPressed: () => onSearch(textEditingController.text),
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(30),
+                borderSide: BorderSide.none,
+              ),
+              filled: true,
+              fillColor: Colors.grey[100],
+            ),
+          );
+        },
       ),
     );
   }
@@ -95,10 +129,11 @@ class WeatherInfo extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.all(20.0),
           child: Column(
+            
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                '$city\n${result.first.day}',
+                '$city\n${"Bugün"}', // o gün hangi günse ilk onu listeliyor.
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   fontSize: 32,
@@ -145,8 +180,8 @@ class WeatherInfo extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  weatherInfoColumn('Min', _formatDegree(result.first.min)),
-                  weatherInfoColumn('Max', _formatDegree(result.first.max)),
+                  weatherInfoColumn('Min', result.first.min),
+                  weatherInfoColumn('Max', result.first.max),
                   weatherInfoColumn('Nem', '%${result.first.humidity}'),
                 ],
               ),
@@ -155,6 +190,7 @@ class WeatherInfo extends StatelessWidget {
           ),
         ),
         // Diğer günlerin hava durumu kartları
+        // hava durumu uygulamalrında genellikle ilk gün geniş diğer günler dar şekilde tasarlanılıyor
         ...result.skip(1).map((weather) {
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
@@ -213,7 +249,7 @@ String _formatDegree(String degree) {
   return degree.split('.').first; // Dereceyi tam sayıya dönüştür
 }
 
-Widget weatherInfoColumn(String label, String value) {
+Widget weatherInfoColumn(String label, String value, {bool isHumidity =false}) {
   return Column(
     children: [
       Text(
@@ -233,9 +269,10 @@ Widget weatherInfoColumn(String label, String value) {
           ),
           children: [
             TextSpan(text: _formatDegree(value)),
+            if(isHumidity)    // nem bilgisinde derece sembolü kalksın
             WidgetSpan(
               child: Transform.translate(
-                offset: Offset(2, -6), // Derece sembolünün konumunu ayarla
+                offset: Offset(2, -6), // Derece sembolü konumu
                 child: const Text(
                   '°',
                   style: TextStyle(

@@ -9,6 +9,8 @@ class WeatherData {
     );
   }
 
+  get city => null;
+
   Map<String, dynamic> toJson() {
     return {
       'result': result.map((v) => v.toJson()).toList(),
