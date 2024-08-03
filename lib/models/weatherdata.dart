@@ -1,9 +1,9 @@
 class WeatherData {
-  List<Result> result;
+  List<Result> result; // Tek bir hava durumu bilgisi
 
   WeatherData({required this.result});
 
-  factory WeatherData.fromJson(Map<String, dynamic> json) {
+  factory WeatherData.fromJson(Map<String, dynamic> json) {  // Converts JSON data to WeatherData object
     return WeatherData(
       result: List<Result>.from(json['result'].map((v) => Result.fromJson(v))),
     );

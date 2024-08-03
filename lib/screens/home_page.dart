@@ -15,7 +15,7 @@ class _HomePageState extends State<HomePage> {
   final WeatherService _weatherService = WeatherService();
   String _city = "";
 
-  // city list (to avoid errors in the search bar)
+  // City list (to avoid errors in the search bar)
   List<String> _cities = [
     'Adana', 'Adıyaman', 'Afyon', 'Ağrı', 'Aksaray', 'Amasya', 'Ankara', 'Antalya', 'Ardahan',
     'Artvin', 'Aydın', 'Balıkesir', 'Bartın', 'Batman', 'Bayburt', 'Bilecik', 'Bingöl', 'Bitlis',
@@ -29,12 +29,12 @@ class _HomePageState extends State<HomePage> {
     'Yozgat', 'Zonguldak'
   ];
 
-  // search weather function by city
+  // Search weather function by city
   void _search(String city) async {
     WeatherData? weatherData = await _weatherService.fetchWeather(city);
     setState(() {
       _result = weatherData;
-      _city = city.toUpperCase(); // city name convert uppercase 
+      _city = city.toUpperCase(); // Converts city name to uppercase 
       _controller.clear();
     });
   }
@@ -47,14 +47,14 @@ class _HomePageState extends State<HomePage> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const SizedBox(height: 50),
-            SearchBar(              // search bar
+            SearchBar(              // Search bar
               controller: _controller,
               onSearch: _search,
               cities: _cities,
             ),
             const SizedBox(height: 20),
             if (_result != null) ...[
-              WeatherInfo(result: _result!.result, city: _city),    // weather info
+              WeatherInfo(result: _result!.result, city: _city),    // Weather info
             ] else ...[
               const Center(child: Text("Şehir ara ve hava durumunu öğren.", style: TextStyle(fontSize: 18))),  
             ],
@@ -125,7 +125,7 @@ class WeatherInfo extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // İlk hava durumu kartı
+        // First weather card
         Padding(
           padding: const EdgeInsets.all(20.0),
           child: Column(
@@ -133,7 +133,7 @@ class WeatherInfo extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                '$city\n${"Bugün"}', // o gün hangi günse ilk onu listeliyor.
+                '$city\n${"Bugün"}', // Lists today's day first.
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   fontSize: 32,
@@ -182,15 +182,15 @@ class WeatherInfo extends StatelessWidget {
                 children: [
                   weatherInfoColumn('Min', result.first.min),
                   weatherInfoColumn('Max', result.first.max),
-                  weatherInfoColumn('Nem', '%${result.first.humidity}'),
+                  weatherInfoColumn('Nem', '%${result.first.humidity}'), // With percent symbol 
                 ],
               ),
               const SizedBox(height: 30),
             ],
           ),
         ),
-        // Diğer günlerin hava durumu kartları
-        // hava durumu uygulamalrında genellikle ilk gün geniş diğer günler dar şekilde tasarlanılıyor
+        // Weather cards for other days
+        //Designed like weather apps (usually first day wide, other days are narrow )
         ...result.skip(1).map((weather) {
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
@@ -246,7 +246,7 @@ class WeatherInfo extends StatelessWidget {
   }
 
 String _formatDegree(String degree) {
-  return degree.split('.').first; // Dereceyi tam sayıya dönüştür
+  return degree.split('.').first; // Converts Degree to integer 
 }
 
 Widget weatherInfoColumn(String label, String value, {bool isHumidity =false}) {
@@ -269,10 +269,10 @@ Widget weatherInfoColumn(String label, String value, {bool isHumidity =false}) {
           ),
           children: [
             TextSpan(text: _formatDegree(value)),
-            if(isHumidity)    // nem bilgisinde derece sembolü kalksın
+            if(isHumidity)    // Degree symbol was removed from the humidity information
             WidgetSpan(
               child: Transform.translate(
-                offset: Offset(2, -6), // Derece sembolü konumu
+                offset: Offset(2, -6), // Sets position of degree symbol
                 child: const Text(
                   '°',
                   style: TextStyle(
